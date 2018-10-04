@@ -12,6 +12,7 @@ BugReports: https://github.com/marinsokol5/dshelperr/issues
 Depends:
     openxlsx,
     data.table,
+    magrittr,
     tidyverse,
     lubridate,
     dummies,
