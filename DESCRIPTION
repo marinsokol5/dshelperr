@@ -1,0 +1,25 @@
+Package: dshelperr
+Type: Package
+Title: Provides Helper Functions for Doing Data Science in R
+Version: 0.0.0.9000
+Authors@R: person("Marin", "Sokol", email="marinsokol5@gmail.com", role=c("aut", "cre"))
+Description: Provides basic functions that could come in handy while doing data science in R.
+License: MIT License
+Encoding: UTF-8
+LazyData: true
+URL: https://github.com/marinsokol5/dshelperr
+BugReports: https://github.com/marinsokol5/dshelperr/issues
+Imports:
+    openxlsx,
+    data.table,
+    tidyverse,
+    lubridate,
+    dummies,
+    funModeling,
+    xgboost,
+    unbalanced,
+    crayon,
+    caret,
+    pROC
+    
+    
