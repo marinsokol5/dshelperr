@@ -9,7 +9,7 @@ Encoding: UTF-8
 LazyData: true
 URL: https://github.com/marinsokol5/dshelperr
 BugReports: https://github.com/marinsokol5/dshelperr/issues
-Imports:
+Depends:
     openxlsx,
     data.table,
     tidyverse,
