@@ -173,6 +173,8 @@ xgboost_optimizer <- function(data, labels, parameter_ranges, fold_times, xgboos
   result
 }
 
+
+
 # train func takes training_data, training_labels, validation_data, validation_labels
 # and params, it returns score
 abstract_optimizer <- function(data, labels, parameter_ranges, train_func, fold_times, fold_seed = 555, return_combinations_dataframe = FALSE) {
@@ -616,4 +618,9 @@ tomek_smote_xgboost <- function(training_set,
   )
 
   xgb_model
+}
+
+one_hot_encode <- function(dataset, ...) {
+  dummy_columns <- c(...)
+  dummies::dummy.data.frame(dataset, names = dummy_columns, sep = "=")
 }
