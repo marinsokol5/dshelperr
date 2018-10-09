@@ -359,6 +359,11 @@ fill_NA_with_value <-  function(dataset, column_with_missing_values, value) {
   )
 }
 
+fill_NA_with_mean <-  function(dataset, column_with_missing_values) {
+  dataset %>% fill_NA_with_value(column_with_missing_values, mean(dataset[[column_with_missing_values]], na.rm = TRUE))
+}
+
+
 fill_NA_with_value_everything <- function(dataset, value) {
   dataset[is.na(dataset)] <- value
   dataset
