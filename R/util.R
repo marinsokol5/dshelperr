@@ -640,6 +640,16 @@ remove_NA_rows <- function(dataset, columns=NULL) {
   return(dataset[tmp, ])
 }
 
+remove_empty_string_rows <- function(dataset, columns=NULL) {
+  if (is.null(columns)) {
+    columns <- colnames(dataset)
+  }
+  for (column in columns) {
+    dataset %<>% remove_rows_with_value_in_a_group_of_values(column, c("", " "))
+  }
+  dataset
+}
+
 # column a string
 # https://stackoverflow.com/questions/34616264/delete-rows-with-value-frequencies-lesser-than-x-in-r
 remove_values_with_less_than_minimal_frequency <- function(dataset, column, minimal_frequency) {
