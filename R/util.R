@@ -1239,3 +1239,23 @@ compare_datasets <- function(dataset1, dataset2, show_df_status = FALSE) {
 equal_sets <- function(set1, set2) {
   length(setdiff(set1, set2)) == 0 && length(setdiff(set2, set1)) == 0
 }
+
+print_columns_with_unique_values_less_than <- function(dataset, threshold = 6) {
+  for (c in colnames(dataset)){
+    if (dataset[[c]] %>% unique() %>% length() < threshold) {
+      print_color(
+        green,
+        c
+      )
+      print_color(
+        blue,
+        dataset[[c]] %>% table() %>% list_to_string(sep = ",\n")
+      )
+      print_color(
+        yellow,
+        page_separator()
+      )
+    }
+  }
+}
+
