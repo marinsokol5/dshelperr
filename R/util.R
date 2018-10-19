@@ -359,10 +359,20 @@ fill_NA_with_value <-  function(dataset, column_with_missing_values, value) {
   )
 }
 
+fill_NA_with_value_str <-  function(dataset, column_with_missing_values, value) {
+  column_qou <- string_to_quosure(column_with_missing_values)
+
+  dataset %>% mutate(
+    !! column_with_missing_values := if_else(
+      is.na(!! column_qou),
+      value,
+      !! column_qou
+    )
+  )
+}
+
 fill_NA_with_mean <-  function(dataset, column_with_missing_values) {
-  column_with_missing_values_quo <-  enquo(column_with_missing_values)
-  column_with_missing_values_string <- quo_name(column_with_missing_values_quo)
-  dataset %>% fill_NA_with_value(column_with_missing_values, mean(dataset[[column_with_missing_values_string]], na.rm = TRUE))
+  fill_NA_with_value_str(dataset, column_with_missing_values, mean(dataset[[column_with_missing_values]], na.rm = TRUE))
 }
 
 
@@ -1005,14 +1015,17 @@ long_to_wide_v2 <- function(dataset, id_variable, time_variable, diff_columns = 
   )
   setDF(dataset)
 
-  percentage_func <- function(column, lagged_column) {
-    difference <- column - lagged_column
-    divisor <- lagged_column
-    ifelse(divisor == 0, ifelse(difference > 0, 1, 0), difference / divisor)
+  if (length(percentage_columns) > 0){
+    percentage_func <- function(column, lagged_column) {
+      difference <- column - lagged_column
+      divisor <- lagged_column
+      ifelse(divisor == 0, ifelse(difference > 0, 1, 0), difference / divisor)
+    }
+    dataset %<>% long_to_wide_v2_create_new_columns(dates, percentage_columns, percentage_func, "perc_diff_between", time_separator = time_separator)
   }
-  dataset %<>% long_to_wide_v2_create_new_columns(dates, percentage_columns, percentage_func, "perc_diff_between", time_separator = time_separator)
-
-  dataset %<>% long_to_wide_v2_create_new_columns(dates, diff_columns, (function(x, y) x - y), "diff_between", time_separator = time_separator)
+  if (length(diff_columns) > 0) {
+    dataset %<>% long_to_wide_v2_create_new_columns(dates, diff_columns, (function(x, y) x - y), "diff_between", time_separator = time_separator)
+  }
 
   dataset
 }
