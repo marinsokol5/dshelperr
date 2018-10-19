@@ -1259,3 +1259,52 @@ print_columns_with_unique_values_less_than <- function(dataset, threshold = 6) {
   }
 }
 
+remove_columns_with_dominant_value <- function(dataset, how_dominant=0.95, verbose = 1) {
+  if (verbose == 1) {
+    progress <- progress_estimated(ncol(dataset))
+  }
+  number_of_values <- nrow(dataset)
+
+  for (c in colnames(dataset)) {
+    if(verbose == 1) {
+      progress$tick()$print()
+    }
+
+    values <- dataset[[c]] %>% table() %>% sort(decreasing = TRUE)
+    dominant_value <- values %>% head(n = 1)
+    dominant_percentage = dominant_value / number_of_values
+
+    if (dominant_percentage >= how_dominant)  {
+      dataset %<>% remove_columns(c)
+      if (verbose >= 2) {
+        print_color(
+          green,
+          "Removing column ",
+          c,
+          " because value ",
+          names(dominant_value),
+          " has percentage of ",
+          round(dominant_percentage,4),
+          "."
+        )
+
+        if (verbose == 3) {
+          print_color(
+            blue,
+            values %>% list_to_string(sep = ",\n")
+          )
+        }
+
+        print_color(
+          yellow,
+          page_separator()
+        )
+      }
+    }
+
+  }
+
+  dataset
+}
+
+
