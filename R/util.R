@@ -473,6 +473,24 @@ replace_values_with_lowest_frequency <- function(dataset, column, how_many, repl
   replace_group_of_values_with_another_value(dataset, column, values_to_replace, replacement)
 }
 
+remove_columns_with_one_unique_value <- function(dataset, verbose=FALSE) {
+  col_to_remove <- c()
+  for (c in colnames(dataset)){
+    if (dataset[[c]] %>% unique() %>% length() == 1) {
+      col_to_remove %<>% append(c)
+    }
+  }
+
+  if (verbose) {
+    print_color(
+      blue,
+      "Removing these columns: \n",
+      vector_to_string(col_to_remove)
+    )
+  }
+  dataset %>% remove_columns_array(col_to_remove)
+}
+
 binary_encode_columns <- function(dataset, columns, zero_value, one_value) {
   dataset %<>% replace_value_with_another_value_vectorized(
     columns,
