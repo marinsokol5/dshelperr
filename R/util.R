@@ -1307,4 +1307,65 @@ remove_columns_with_dominant_value <- function(dataset, how_dominant=0.95, verbo
   dataset
 }
 
+left_join_v2 <- function(x, y, by = NULL, name_for_the_right_table = NULL, ...) {
+  if (is.null(name_for_the_right_table)) {
+    name_for_the_right_table <- deparse(substitute(y))
+  }
+
+  joining_columns <- c()
+  if (is.null(by)) {
+    joining_columns <- intersect(colnames(x), colnames(y))
+  } else {
+    if (length(names(by)) > 0) {
+      joining_columns <- unname(by)
+    } else {
+      joining_columns <- by
+    }
+  }
+
+  y %<>% concatenate_name_before_some_colums_df(
+    name = name_for_the_right_table,
+    columns_to_concatenate = joining_columns,
+    ALL_OTHERS = TRUE
+  )
+
+  x %>% dplyr::left_join(
+    y,
+    by = by,
+    ...
+  )
+}
+
+
+explain_model_lime <- function(model,
+                               training_data,
+                               testing_data = NULL,
+                               n_sample = 500,
+                               n_features = 10) {
+  if (is.null(testing_data)) {
+    testing_data <- training_data
+  }
+
+  explainer <- lime(training_data, model)
+
+  explanation <- explain(
+    testing_data[sample(nrow(testing_data), n_sample), ],
+    explainer,
+    n_labels = 1,
+    n_features = n_features
+  )
+
+  explanation %>%
+    group_by(feature_desc) %>%
+    summarise(
+      feature_value_mean = mean(feature_value),
+      feature_weight_mean = weighted.mean(feature_weight, model_r2)
+    ) %>%
+    arrange(desc(abs(feature_weight_mean))) %>%
+    mutate(
+      feature_value_mean = round(feature_value_mean, 6),
+      feature_weight_mean = round(feature_weight_mean, 6)
+    )
+
+}
 
