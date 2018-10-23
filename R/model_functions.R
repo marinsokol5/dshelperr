@@ -175,6 +175,69 @@ xgboost_optimizer <- function(data, labels, parameter_ranges, fold_times, xgboos
 
 
 
+smote_xgboost_optimizer <- function(data,
+                                    labels,
+                                    smote_parameter_ranges,
+                                    xgboost_parameter_ranges,
+                                    xgboost_constant_params,
+                                    fold_times,
+                                    fold_seed = 555,
+                                    xgboost_seed = 556,
+                                    smote_seed = 557,
+                                    return_combinations_dataframe = FALSE) {
+  smote_param_names <- names(smote_parameter_ranges)
+  xgboost_param_names <- names(xgboost_parameter_ranges)
+
+  smote_xgboost_train_func <- function(training_data, training_labels, validation_data, validation_labels, combination) {
+    smote_combination <- combination[smote_param_names]
+    xgboost_combination <- combination[xgboost_param_names]
+
+    set.seed(smote_seed)
+    smoted <- call_func_with_params(
+      ubSMOTE,
+      list(X = training_data, Y = as.factor(training_labels)),
+      smote_combination
+    )
+
+    training_data <- smoted$X
+    training_labels <- factor_to_numeric(smoted$Y)
+
+    training_dmatrix <- xgb.DMatrix(as.matrix(training_data), label = training_labels)
+    validation_dmatrix <- xgb.DMatrix(as.matrix(validation_data), label = validation_labels)
+
+    set.seed(xgboost_seed)
+    xgboost_model <- call_func_with_params(
+      xgb.train,
+      list(
+        data = training_dmatrix,
+        watchlist = list(training = training_dmatrix, validation = validation_dmatrix),
+        base_score = mean(training_labels),
+        params = xgboost_combination
+      ),
+      xgboost_constant_params
+    )
+
+    xgboost_model$best_score
+  }
+
+  result <- abstract_optimizer(
+    data,
+    labels,
+    parameter_ranges = c(smote_parameter_ranges, xgboost_parameter_ranges),
+    train_func = smote_xgboost_train_func,
+    fold_times = fold_times,
+    fold_seed = fold_seed,
+    return_combinations_dataframe = return_combinations_dataframe
+  )
+
+  if (return_combinations_dataframe) {
+    result$xgboost_constant_params <- xgboost_constant_params
+  }
+
+  result
+}
+
+
 # train func takes training_data, training_labels, validation_data, validation_labels
 # and params, it returns score
 abstract_optimizer <- function(data, labels, parameter_ranges, train_func, fold_times, fold_seed = 555, return_combinations_dataframe = FALSE) {
