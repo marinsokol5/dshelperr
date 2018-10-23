@@ -95,7 +95,16 @@ SMOTE_v2 <- function(X, Y, minority_increase = 2, minority_percentage = 0.5, k =
 }
 
 
-smote_optimizer <- function(data, labels, parameter_ranges, xgb_parameters, fold_times, fold_seed = 555, xgboost_seed = 556, smote_seed = 557, return_combinations_dataframe = FALSE) {
+smote_optimizer <- function(data,
+                            labels,
+                            parameter_ranges,
+                            xgb_parameters,
+                            fold_times,
+                            fold_seed = 555,
+                            xgboost_seed = 556,
+                            smote_seed = 557,
+                            return_combinations_dataframe = FALSE,
+                            verbose = 1) {
   smote_train_func <- function(training_data, training_labels, validation_data, validation_labels, combination) {
     set.seed(smote_seed)
     smoted <- call_func_with_params(
@@ -131,12 +140,21 @@ smote_optimizer <- function(data, labels, parameter_ranges, xgb_parameters, fold
     train_func = smote_train_func,
     fold_times = fold_times,
     fold_seed = fold_seed,
-    return_combinations_dataframe = return_combinations_dataframe
+    return_combinations_dataframe = return_combinations_dataframe,
+    verbose = verbose
   )
 }
 
 
-xgboost_optimizer <- function(data, labels, parameter_ranges, fold_times, xgboost_params, fold_seed = 555, xgboost_seed = 556, return_combinations_dataframe = FALSE) {
+xgboost_optimizer <- function(data,
+                              labels,
+                              parameter_ranges,
+                              fold_times,
+                              xgboost_params,
+                              fold_seed = 555,
+                              xgboost_seed = 556,
+                              return_combinations_dataframe = FALSE,
+                              verbose = 1) {
   xgboost_train_func <- function(training_data, training_labels, validation_data, validation_labels, combination) {
     training_dmatrix <- xgb.DMatrix(as.matrix(training_data), label = training_labels)
     validation_dmatrix <- xgb.DMatrix(as.matrix(validation_data), label = validation_labels)
@@ -163,7 +181,8 @@ xgboost_optimizer <- function(data, labels, parameter_ranges, fold_times, xgboos
     train_func = xgboost_train_func,
     fold_times = fold_times,
     fold_seed = fold_seed,
-    return_combinations_dataframe = return_combinations_dataframe
+    return_combinations_dataframe = return_combinations_dataframe,
+    verbose = verbose
   )
 
   if (return_combinations_dataframe) {
@@ -184,7 +203,8 @@ smote_xgboost_optimizer <- function(data,
                                     fold_seed = 555,
                                     xgboost_seed = 556,
                                     smote_seed = 557,
-                                    return_combinations_dataframe = FALSE) {
+                                    return_combinations_dataframe = FALSE,
+                                    verbose = 1) {
   smote_param_names <- names(smote_parameter_ranges)
   xgboost_param_names <- names(xgboost_parameter_ranges)
 
@@ -227,7 +247,8 @@ smote_xgboost_optimizer <- function(data,
     train_func = smote_xgboost_train_func,
     fold_times = fold_times,
     fold_seed = fold_seed,
-    return_combinations_dataframe = return_combinations_dataframe
+    return_combinations_dataframe = return_combinations_dataframe,
+    verbose = verbose
   )
 
   if (return_combinations_dataframe) {
@@ -240,7 +261,8 @@ smote_xgboost_optimizer <- function(data,
 
 # train func takes training_data, training_labels, validation_data, validation_labels
 # and params, it returns score
-abstract_optimizer <- function(data, labels, parameter_ranges, train_func, fold_times, fold_seed = 555, return_combinations_dataframe = FALSE) {
+abstract_optimizer <- function(data, labels, parameter_ranges, train_func, fold_times, fold_seed = 555, return_combinations_dataframe = FALSE, verbose = 1) {
+
   set.seed(fold_seed)
   folds <- createFolds(
     y = labels,
@@ -253,34 +275,46 @@ abstract_optimizer <- function(data, labels, parameter_ranges, train_func, fold_
 
   parameter_combinations_df <- expand.grid(parameter_ranges)
   number_of_combinations <- nrow(parameter_combinations_df)
-  print_color(
-    red,
-    "There are ",
-    number_of_combinations,
-    " possible combination."
-  )
-  print_color(
-    yellow,
-    page_separator()
-  )
+  if (verbose == 1) {
+    print_color(
+      red,
+      "There are ",
+      number_of_combinations,
+      " possible combination."
+    )
+    print_color(
+      yellow,
+      page_separator()
+    )
+  }
+
+  if (verbose == 0) {
+    progress <- progress_estimated(number_of_combinations)
+  }
 
   for (i in 1:number_of_combinations) {
     score_sum <- 0
     combination <- as.list(unlist(parameter_combinations_df[i, ]))
-    print_color(
-      cyan,
-      "Combination ",
-      i,
-      " out of ",
-      number_of_combinations,
-      "."
-    )
-    print_color(
-      blue,
-      "Parameters combination: ",
-      "\n\t",
-      list_to_string(combination, "\n\t")
-    )
+
+    if(verbose == 0) {
+      progress$tick()$print()
+    }
+    if(verbose == 1) {
+      print_color(
+        cyan,
+        "Combination ",
+        i,
+        " out of ",
+        number_of_combinations,
+        "."
+      )
+      print_color(
+        blue,
+        "Parameters combination: ",
+        "\n\t",
+        list_to_string(combination, "\n\t")
+      )
+    }
 
     for (fold_index in 1:length(folds))  {
       fold_data <- folds[[fold_index]]
@@ -301,38 +335,45 @@ abstract_optimizer <- function(data, labels, parameter_ranges, train_func, fold_
 
       score_sum <- score_sum + score
     }
-    print_color(
-      cyan,
-      "Score sum after ",
-      fold_times,
-      " folds is ",
-      score_sum,
-      "."
-    )
-    print_color(
-      cyan,
-      "Average score is ",
-      score_sum / fold_times,
-      "."
-    )
+    if(verbose == 1) {
+      print_color(
+        cyan,
+        "Score sum after ",
+        fold_times,
+        " folds is ",
+        score_sum,
+        "."
+      )
+      print_color(
+        cyan,
+        "Average score is ",
+        score_sum / fold_times,
+        "."
+      )
+    }
+
     score_sum_vector %<>% append(score_sum)
 
     if (is.null(best_score_sum) || score_sum > best_score_sum) {
-      print_color(
-        green,
-        "Found the new best combination. ",
-        "Best score sum before was ", best_score_sum,
-        ", while new one is ", score_sum,
-        "."
-      )
+      if (verbose == 1) {
+        print_color(
+          green,
+          "Found the new best combination. ",
+          "Best score sum before was ", best_score_sum,
+          ", while new one is ", score_sum,
+          "."
+        )
+      }
+
       best_score_sum <- score_sum
       best_combination <- combination
     }
-
-    print_color(
-      yellow,
-      page_separator()
-    )
+    if (verbose == 1) {
+      print_color(
+        yellow,
+        page_separator()
+      )
+    }
   }
 
   parameter_combinations_df$score_sum <- score_sum_vector
