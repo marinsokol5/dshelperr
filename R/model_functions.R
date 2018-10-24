@@ -406,7 +406,7 @@ abstract_optimizer <- function(data,
             step <- ifelse(
               param_name %in% names(steps),
               steps[[param_name]],
-              min(abs(sort(a) - lead(sort(a))), na.rm = TRUE)
+              min(abs(sort(parameter_ranges[[param_name]]) - lead(sort(parameter_ranges[[param_name]]))), na.rm = TRUE)
             )
             went_up <- last_directions[[param_name]]
             if (correlation > 0) {
