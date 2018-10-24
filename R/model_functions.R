@@ -277,7 +277,9 @@ abstract_optimizer <- function(data,
                                verbose = 1,
                                recursively_improve = FALSE,
                                steps = list(),
-                               corr_threshold = 0.2) {
+                               corr_threshold = 0.2,
+                               min_boundaries = list(),
+                               max_boundaries = list()) {
 
   set.seed(fold_seed)
   folds <- createFolds(
@@ -412,16 +414,26 @@ abstract_optimizer <- function(data,
             if (correlation > 0) {
               max_elem <- max(parameter_ranges[[param_name]])
               if (is.null(went_up) || went_up) {
-                parameter_ranges[[param_name]] <- c(max_elem, max_elem + step)
-                last_directions[[param_name]] <- TRUE
+                max_boundarie <- max_boundaries[[param_name]]
+                if (is.null(max_boundarie) || max_boundarie > (max_elem + step)) {
+                  parameter_ranges[[param_name]] <- c(max_elem, max_elem + step)
+                  last_directions[[param_name]] <- TRUE
+                } else {
+                  parameter_ranges[[param_name]] <- max_elem
+                }
               } else {
                 parameter_ranges[[param_name]] <- max_elem
               }
             } else {
               min_elem <- min(parameter_ranges[[param_name]])
               if (is.null(went_up) || !went_up) {
-                parameter_ranges[[param_name]] <- c(min_elem - step, min_elem)
-                last_directions[[param_name]] <- FALSE
+                min_boundarie <- min_boundaries[[param_name]]
+                if (is.null(min_boundarie) || min_boundarie < (min_elem - step)) {
+                  parameter_ranges[[param_name]] <- c(min_elem - step, min_elem)
+                  last_directions[[param_name]] <- FALSE
+                } else {
+                  parameter_ranges[[param_name]] <- min_elem
+                }
               } else {
                 parameter_ranges[[param_name]] <- min_elem
               }
