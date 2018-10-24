@@ -398,7 +398,7 @@ abstract_optimizer <- function(data,
     while(TRUE) {
       iter <- iter + 1
       for (param_name in names(parameter_ranges)) {
-        correlation <- suppressWarnings(cor(next_parameters_combination[[param]], next_parameters_combination[["score"]]))
+        correlation <- suppressWarnings(cor(next_parameters_combination[[param_name]], next_parameters_combination[["score"]]))
         if (!is.na(correlation)) {
           if (abs(correlation) < corr_threshold) {
             parameter_ranges[[param_name]] %<>% mean()
