@@ -368,8 +368,8 @@ abstract_optimizer <- function(data,
         print_color(
           green,
           "Found the new best combination. ",
-          "Best score sum before was ", best_score_sum,
-          ", while new one is ", score_sum,
+          "Best score before was ", best_score,
+          ", while new one is ", score,
           "."
         )
       }
