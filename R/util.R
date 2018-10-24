@@ -852,7 +852,8 @@ df_status_v2 <- function(dataset, print_results=TRUE, max_char_length = 45, pret
       p_es = if_else(p_es == 100.00 & q_es < number_of_rows, 99.99, p_es),
       class = sapply(dataset, class),
       unique = str_number(sapply(dataset, function(x) sum(!is.na(unique(x))))),
-      mdp = round(sapply(dataset, function(x) ifelse(is.list(x), NA, head(sort(table(x), decreasing=TRUE), n=1) / number_of_rows)), 2)
+      mdp = sapply(dataset, function(x) ifelse(is.list(x), NA, names(head(sort(table(x), decreasing = TRUE), n=1)))),
+      mdp_p = round(sapply(dataset, function(x) ifelse(is.list(x), NA, head(sort(table(x), decreasing=TRUE), n=1) / number_of_rows)), 2)
     )
   result %<>% mutate(
     q_0 = str_number(q_0),
