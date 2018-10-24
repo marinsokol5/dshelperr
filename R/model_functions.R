@@ -411,7 +411,7 @@ abstract_optimizer <- function(data,
             went_up <- last_directions[[param_name]]
             if (correlation > 0) {
               max_elem <- max(parameter_ranges[[param_name]])
-              if (!is.null(went_up) || went_up) {
+              if (is.null(went_up) || went_up) {
                 parameter_ranges[[param_name]] <- c(max_elem, max_elem + step)
                 last_directions[[param_name]] <- TRUE
               } else {
@@ -419,7 +419,7 @@ abstract_optimizer <- function(data,
               }
             } else {
               min_elem <- min(parameter_ranges[[param_name]])
-              if (!is.null(went_up) || !went_up) {
+              if (is.null(went_up) || !went_up) {
                 parameter_ranges[[param_name]] <- c(min_elem - step, min_elem)
                 last_directions[[param_name]] <- FALSE
               } else {
