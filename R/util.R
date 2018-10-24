@@ -797,6 +797,8 @@ most_frequent_value <- function(...) {
   names(which.max(table(...)))
 }
 
+
+
 save_df_status <- function(dataset, name = NULL) {
   if (is.null(name)) {
     name <- deparse(substitute(dataset))
@@ -812,6 +814,7 @@ save_df_status <- function(dataset, name = NULL) {
 # Empty string quantity will represent number of lists that contain empty strigs.
 # NA quantity is the same.
 # INF quantity cannot be computed so it is set to NA
+# mdp = most dominant percentage
 df_status_v2 <- function(dataset, print_results=TRUE, max_char_length = 45, pretty_print=TRUE) {
   ## If input is NA then ask for a single vector. True if it is a single vector
   number_of_rows <- nrow(dataset)
@@ -844,11 +847,12 @@ df_status_v2 <- function(dataset, print_results=TRUE, max_char_length = 45, pret
       q_inf = sapply(dataset, function(x) ifelse(is.list(x), NA, sum(is.infinite(x)))),
       p_inf = round(100 * q_inf / number_of_rows, 2),
       p_inf = if_else(p_inf == 100.00 & q_inf < number_of_rows, 99.99, p_inf),
-      q_es=sapply(dataset, empty_str_func),
+      q_es = sapply(dataset, empty_str_func),
       p_es = round(100 * q_es / number_of_rows, 2),
       p_es = if_else(p_es == 100.00 & q_es < number_of_rows, 99.99, p_es),
       class = sapply(dataset, class),
-      unique = str_number(sapply(dataset, function(x) sum(!is.na(unique(x)))))
+      unique = str_number(sapply(dataset, function(x) sum(!is.na(unique(x))))),
+      mdp = round(sapply(dataset, function(x) ifelse(is.list(x), NA, head(sort(table(x), decreasing=TRUE), n=1) / number_of_rows)), 2)
     )
   result %<>% mutate(
     q_0 = str_number(q_0),
