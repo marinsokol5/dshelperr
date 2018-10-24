@@ -105,7 +105,10 @@ smote_optimizer <- function(data,
                             smote_seed = 557,
                             return_combinations_dataframe = FALSE,
                             verbose = 1,
-                            recursively_improve = FALSE) {
+                            recursively_improve = FALSE,
+                            corr_threshold = 0.2,
+                            min_boundaries = list(),
+                            max_boundaries = list()) {
   smote_train_func <- function(training_data, training_labels, validation_data, validation_labels, combination) {
     set.seed(smote_seed)
     smoted <- call_func_with_params(
@@ -143,7 +146,10 @@ smote_optimizer <- function(data,
     fold_seed = fold_seed,
     return_combinations_dataframe = return_combinations_dataframe,
     verbose = verbose,
-    recursively_improve = recursively_improve
+    recursively_improve = recursively_improve,
+    corr_threshold = corr_threshold,
+    min_boundaries = min_boundaries,
+    max_boundaries = max_boundaries
   )
 }
 
@@ -157,7 +163,10 @@ xgboost_optimizer <- function(data,
                               xgboost_seed = 556,
                               return_combinations_dataframe = FALSE,
                               verbose = 1,
-                              recursively_improve = FALSE) {
+                              recursively_improve = FALSE,
+                              corr_threshold = 0.2,
+                              min_boundaries = list(),
+                              max_boundaries = list()) {
   xgboost_train_func <- function(training_data, training_labels, validation_data, validation_labels, combination) {
     training_dmatrix <- xgb.DMatrix(as.matrix(training_data), label = training_labels)
     validation_dmatrix <- xgb.DMatrix(as.matrix(validation_data), label = validation_labels)
@@ -186,7 +195,10 @@ xgboost_optimizer <- function(data,
     fold_seed = fold_seed,
     return_combinations_dataframe = return_combinations_dataframe,
     verbose = verbose,
-    recursively_improve = recursively_improve
+    recursively_improve = recursively_improve,
+    corr_threshold = corr_threshold,
+    min_boundaries = min_boundaries,
+    max_boundaries = max_boundaries
   )
 
   if (return_combinations_dataframe) {
@@ -209,7 +221,10 @@ smote_xgboost_optimizer <- function(data,
                                     smote_seed = 557,
                                     return_combinations_dataframe = FALSE,
                                     verbose = 1,
-                                    recursively_improve = FALSE) {
+                                    recursively_improve = FALSE,
+                                    corr_threshold = 0.2,
+                                    min_boundaries = list(),
+                                    max_boundaries = list()) {
   smote_param_names <- names(smote_parameter_ranges)
   xgboost_param_names <- names(xgboost_parameter_ranges)
 
@@ -254,7 +269,10 @@ smote_xgboost_optimizer <- function(data,
     fold_seed = fold_seed,
     return_combinations_dataframe = return_combinations_dataframe,
     verbose = verbose,
-    recursively_improve = recursively_improve
+    recursively_improve = recursively_improve,
+    corr_threshold = corr_threshold,
+    min_boundaries = min_boundaries,
+    max_boundaries = max_boundaries
   )
 
   if (return_combinations_dataframe) {
@@ -279,7 +297,7 @@ abstract_optimizer <- function(data,
                                steps = list(),
                                corr_threshold = 0.2,
                                min_boundaries = list(),
-                               max_boundaries = list()) {
+                               max_boundaries = list() ) {
 
   set.seed(fold_seed)
   folds <- createFolds(
