@@ -275,7 +275,9 @@ abstract_optimizer <- function(data,
                                fold_seed = 555,
                                return_combinations_dataframe = FALSE,
                                verbose = 1,
-                               recursively_improve = FALSE) {
+                               recursively_improve = FALSE,
+                               steps = list(),
+                               corr_threshold = 0.2) {
 
   set.seed(fold_seed)
   folds <- createFolds(
@@ -384,6 +386,71 @@ abstract_optimizer <- function(data,
   }
 
   parameter_combinations_df$score <- score_vector
+
+
+  if (recursively_improve) {
+    list_of_iterations <- list()
+    iter <- 1
+    list_of_iterations[[as.character(iter)]] <- parameter_combinations_df
+    next_parameters_combination <- parameter_combinations_df
+    last_directions <- list()
+
+    while(TRUE) {
+      iter <- iter + 1
+      for (param_name in names(parameter_ranges)) {
+        correlation <- suppressWarnings(cor(next_parameters_combination[[param]], next_parameters_combinationf[["score"]]))
+        if (!is.na(correlation)) {
+          if (abs(correlation) < corr_threshold) {
+            parameter_ranges[[param_name]] %<>% mean()
+          } else {
+            step <- ifelse(
+              param_name %in% names(steps),
+              steps[[param_name]],
+              min(abs(sort(a) - lead(sort(a))), na.rm = TRUE)
+            )
+            went_up <- last_directions[[param_name]]
+            if (correlation > 0) {
+              max_elem <- max(parameter_ranges[[param_name]])
+              if (!is.null(went_up) || went_up) {
+                parameter_ranges[[param_name]] <- c(max_elem, max_elem + step)
+                last_directions[[param_name]] <- TRUE
+              } else {
+                parameter_ranges[[param_name]] <- max_elem
+              }
+            } else {
+              min_elem <- min(parameter_ranges[[param_name]])
+              if (!is.null(went_up) || !went_up) {
+                parameter_ranges[[param_name]] <- c(min_elem - step, min_elem)
+                last_directions[[param_name]] <- FALSE
+              } else {
+                parameter_ranges[[param_name]] <- min_elem
+              }
+            }
+          }
+        }
+      }
+
+      next_parameters_combination <- abstract_optimizer(
+        data = data,
+        labels = labels,
+        parameter_ranges = parameter_ranges,
+        train_func = train_func,
+        fold_times = fold_times,
+        fold_seed = fold_seed,
+        return_combinations_dataframe = TRUE,
+        verbose = verbose,
+        recursively_improve = FALSE
+      )$combinations
+
+      list_of_iterations[[as.character(iter)]] <- next_parameters_combination
+      if (nrow(next_parameters_combination) == 1) {
+        break
+      }
+
+    }
+    return(list_of_iterations)
+  }
+
   if (return_combinations_dataframe) {
     return (list(
       combinations = parameter_combinations_df,
