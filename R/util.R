@@ -1354,7 +1354,7 @@ explain_model_lime <- function(model,
   explainer <- lime(training_data, model)
 
   explanation <- explain(
-    testing_data[sample(nrow(testing_data), n_sample), ],
+    testing_data %>% random_n_rows(n_sample),
     explainer,
     n_labels = 1,
     n_features = n_features
@@ -1363,13 +1363,11 @@ explain_model_lime <- function(model,
   explanation %>%
     group_by(feature_desc) %>%
     summarise(
-      feature_value_mean = mean(feature_value),
       feature_weight_mean = weighted.mean(feature_weight, model_r2)
     ) %>%
     arrange(desc(abs(feature_weight_mean))) %>%
     mutate(
-      feature_value_mean = round(feature_value_mean, 6),
-      feature_weight_mean = round(feature_weight_mean, 6)
+      feature_weight_mean = round(feature_weight_mean, 5)
     )
 
 }
