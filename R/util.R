@@ -1374,3 +1374,6 @@ explain_model_lime <- function(model,
 
 }
 
+random_n_rows <- function(dataset, n) {
+  dataset[sample(nrow(dataset), n), ]
+}
