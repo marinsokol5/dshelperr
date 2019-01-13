@@ -330,7 +330,8 @@ abstract_optimizer <- function(data,
 
   for (i in 1:number_of_combinations) {
     score_sum <- 0
-    combination <- as.list(unlist(parameter_combinations_df[i, ]))
+    combination <- as.list(c(parameter_combinations_df[i, ]))
+    combination %<>% purrr::map_if(is.factor, as.character)
 
     if(verbose == 0) {
       progress$tick()$print()
@@ -832,6 +833,59 @@ one_hot_encode <- function(dataset, ...) {
   dummies::dummy.data.frame(dataset, names = dummy_columns, sep = "=")
 }
 
+lime_optimizer <- function(data,
+                           labels,
+                           model,
+                           fold_times = 4,
+                           explain_params = NULL,
+                           fold_seed = 555,
+                           lime_seed = 556,
+                           return_combinations_dataframe = FALSE,
+                           verbose = 1){
+  if (is.null(explain_params)) {
+    explain_params <- list(
+      n_features = c(4, 6, 8),
+      n_permutations = 5000,
+      feature_select = c("forward_selection", "highest_weights", "lasso_path", "tree"),
+      dist_fun = c("gower", "euclidean", "manhattan"),
+      kernel_width = c(3, 5)
+    )
+  }
+
+  lime_train_func <- function(training_data, training_labels, validation_data, validation_labels, combination) {
+    set.seed(lime_seed)
+
+    explainer = lime(training_data, model)
+    explanation = call_func_with_params(
+      func = explain,
+      list(
+        x = validation_data,
+        explainer = explainer,
+        n_labels = 1
+      ),
+      combination
+    )
+
+    mean(explanation$model_r2)
+  }
 
 
+  result <- abstract_optimizer(
+    data,
+    labels,
+    parameter_ranges = explain_params,
+    train_func = lime_train_func,
+    fold_times = fold_times,
+    fold_seed = fold_seed,
+    return_combinations_dataframe = return_combinations_dataframe,
+    verbose = verbose,
+    recursively_improve = FALSE
+  )
+
+  if (return_combinations_dataframe) {
+    result$explain_params <- explain_params
+  }
+
+  result
+}
 

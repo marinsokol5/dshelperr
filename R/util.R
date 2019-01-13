@@ -1346,7 +1346,9 @@ explain_model_lime <- function(model,
                                training_data,
                                testing_data = NULL,
                                n_sample = 500,
-                               n_features = 10) {
+                               n_features = 10,
+                               verbose=FALSE,
+                               return_results=FALSE) {
   if (is.null(testing_data)) {
     testing_data <- training_data
   }
@@ -1360,7 +1362,20 @@ explain_model_lime <- function(model,
     n_features = n_features
   )
 
-  explanation %>%
+  if (verbose) {
+    print_color(
+      blue,
+      "Average R squared is ",
+      str_number(mean(explanation$model_r2)),
+      " while it's median is ",
+      str_number(median(explanation$model_r2)),
+      "."
+      )
+  }
+
+  result <- list()
+  result$explanations <- explanation
+  result$feature_importance <- explanation %>%
     group_by(feature_desc) %>%
     summarise(
       feature_weight_mean = weighted.mean(feature_weight, model_r2)
@@ -1370,6 +1385,11 @@ explain_model_lime <- function(model,
       feature_weight_mean = round(feature_weight_mean, 5)
     )
 
+  if (return_results) {
+    return (result)
+  } else {
+    return (result$feature_importance)
+  }
 }
 
 random_n_rows <- function(dataset, n) {
