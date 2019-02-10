@@ -814,15 +814,15 @@ save_df_status <- function(dataset, name = NULL) {
 # Empty string quantity will represent number of lists that contain empty strigs.
 # NA quantity is the same.
 # INF quantity cannot be computed so it is set to NA
-# mdp = most dominant percentage
-df_status_v2 <- function(dataset, print_results=TRUE, max_char_length = 45, pretty_print=TRUE) {
+# mfv = most frequent value
+df_status_v2 <- function(dataset, print_results=TRUE, max_char_length = 45, pretty_print=TRUE, compute_mfv=TRUE) {
   ## If input is NA then ask for a single vector. True if it is a single vector
   number_of_rows <- nrow(dataset)
 
   empty_str_func <- function(x) {
-     if (is.list(x)) {
-       return(sum(sapply(x, function(x) "" %in% x), na.rm = TRUE))
-     }
+    if (is.list(x)) {
+      return(sum(sapply(x, function(x) "" %in% x), na.rm = TRUE))
+    }
     if (is.factor(x)) {
       x %<>% as.character()
     }
@@ -851,10 +851,15 @@ df_status_v2 <- function(dataset, print_results=TRUE, max_char_length = 45, pret
       p_es = round(100 * q_es / number_of_rows, 2),
       p_es = if_else(p_es == 100.00 & q_es < number_of_rows, 99.99, p_es),
       class = sapply(dataset, class),
-      unique = str_number(sapply(dataset, function(x) sum(!is.na(unique(x))))),
-      mdp = sapply(dataset, function(x) ifelse(is.list(x), NA, names(head(sort(table(x), decreasing = TRUE), n=1)))),
-      mdp_p = round(sapply(dataset, function(x) ifelse(is.list(x), NA, head(sort(table(x), decreasing=TRUE), n=1) / number_of_rows)), 2)
+      unique = str_number(sapply(dataset, function(x) sum(!is.na(unique(x)))))
     )
+  if (compute_mfv) {
+    result %<>% mutate(
+      mfv = sapply(dataset, function(x) ifelse(is.list(x) || all(is.na(x)), NA, names(head(sort(table(x), decreasing = TRUE), n=1)))),
+      mfv_p = round(sapply(dataset, function(x) ifelse(is.list(x) || all(is.na(x)), NA, 100 * head(sort(table(x), decreasing=TRUE), n=1) / number_of_rows)), 2)
+    )
+  }
+
   result %<>% mutate(
     q_0 = str_number(q_0),
     q_na = str_number(q_na),
