@@ -1418,7 +1418,7 @@ explain_model_shap <- function(model,
   ) %>%
     as.data.frame()
 
-  feature_importance <- feature_contribution %>%
+  feature_importance <- feature_contributions %>%
     remove_columns("BIAS") %>%
     sapply(function(x) sum(abs(x))) %>%
     sort(decreasing = TRUE)
