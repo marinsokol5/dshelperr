@@ -1383,9 +1383,9 @@ explain_model_lime <- function(model,
   result$feature_importance <- explanation %>%
     group_by(feature_desc) %>%
     summarise(
-      feature_weight_mean = weighted.mean(feature_weight, model_r2)
+      feature_weight_mean = weighted.mean(abs(feature_weight), model_r2)
     ) %>%
-    arrange(desc(abs(feature_weight_mean))) %>%
+    arrange(desc(feature_weight_mean)) %>%
     mutate(
       feature_weight_mean = round(feature_weight_mean, 5)
     )
@@ -1396,6 +1396,48 @@ explain_model_lime <- function(model,
     return (result$feature_importance)
   }
 }
+
+explain_model_shap <- function(model,
+                               testing_data,
+                               n_sample = NULL,
+                               n_features = NULL,
+                               approxcontrib = FALSE,
+                               return_results=FALSE) {
+  if (is.null(n_sample)) {
+    n_sample <- nrow(testing_data)
+  }
+  if (is.null(n_features)) {
+    n_features <- ncol(testing_data)
+  }
+
+  feature_contributions <- predict(
+    model,
+    testing_data %>% random_n_rows(n_sample),
+    predcontrib=TRUE,
+    approxcontrib=approxcontrib
+  ) %>%
+    as.data.frame()
+
+  feature_importance <- feature_contribution %>%
+    remove_columns("BIAS") %>%
+    sapply(function(x) sum(abs(x))) %>%
+    sort(decreasing = TRUE)
+
+
+  result <- list()
+  result$feature_contributions <- feature_contributions
+  result$feature_importance <- data.frame(
+    feature_name=names(feature_importance),
+    feature_importance=as.numeric(feature_importance)
+    )[n_features, ]
+
+  if (return_results) {
+    return (result)
+  } else {
+    return (result$feature_importance)
+  }
+}
+
 
 random_n_rows <- function(dataset, n) {
   dataset[sample(nrow(dataset), n), ]
