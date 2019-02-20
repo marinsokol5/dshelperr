@@ -1429,7 +1429,7 @@ explain_model_shap <- function(model,
   result$feature_importance <- data.frame(
     feature_name=names(feature_importance),
     feature_importance=as.numeric(feature_importance)
-    )[n_features, ]
+    )[1:n_features, ]
 
   if (return_results) {
     return (result)
